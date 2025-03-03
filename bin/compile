@@ -76,32 +76,3 @@ else
   uv sync
 fi
 uv pip freeze > requirements.txt
-
-RUNTIME_FILE="runtime.txt"
-
-log "Export Python version from uv to Heroku $RUNTIME_FILE file"
-
-if [ "${DISABLE_UV_CREATE_RUNTIME_FILE:-0}" != "0" ] ; then
-  log "Skip generation of $RUNTIME_FILE file from uv.lock"
-  exit 0
-fi
-
-if [ -f "$RUNTIME_FILE" ] ; then
-  log "$RUNTIME_FILE found, delete this file from your repository!" >&2
-  exit 1
-fi
-
-if [ -z "${PYTHON_RUNTIME_VERSION:-}" ] ; then
-  log "Read Python version from uv.lock"
-  PYTHON_RUNTIME_VERSION=$(head --lines=2 "uv.lock" | sed -nE 's/^requires-python[[:space:]]*=[[:space:]]*"==([0-9.]+)"/\1/p')
-else
-  log "Force Python version to $PYTHON_RUNTIME_VERSION since the $PYTHON_RUNTIME_VERSION environment variable is set!"
-fi
-
-if [[ -n "$PYTHON_RUNTIME_VERSION" ]] ; then
-  log "PYTHON_RUNTIME_VERSION is set to $PYTHON_RUNTIME_VERSION"
-  echo "python-$PYTHON_RUNTIME_VERSION" > "$RUNTIME_FILE"
-else
-  log "$PYTHON_RUNTIME_VERSION is not valid, please specify an exact Python version (e.g. ==3.12.6) in your pyproject.toml (so it can be properly set in uv.lock)" >&2
-  exit 1
-fi
